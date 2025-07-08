@@ -62,6 +62,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+app.get('/',(req,res)=>{
+    res.send({
+        activeStatus:true,
+        error:false,
+    })
+})
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
