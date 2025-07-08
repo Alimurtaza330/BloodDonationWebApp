@@ -22,7 +22,7 @@ const VerifyPage = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/auth/verify', { code });
+      const response = await axios.post('https://blood-donation-web-app-beta.vercel.app/api/auth/verify', { code });
       
       if (response.data.token) {
         // Save token and user data
@@ -46,7 +46,7 @@ const VerifyPage = () => {
   const handleResendCode = async () => {
     try {
       setResending(true);
-      const response = await axios.post('http://localhost:5000/api/resend-code', { email });
+      const response = await axios.post('https://blood-donation-web-app-beta.vercel.app/api/resend-code', { email });
       
       if (response.data.message) {
         setError('');
