@@ -76,7 +76,7 @@ const DetailPage = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:5000/api/profile/me');
+      const response = await axios.get('https://blood-donation-web-app-beta.vercel.app/api/profile/me');
       setProfile(response.data.profile);
       setFormData({
         name: response.data.profile.name || '',
@@ -119,7 +119,7 @@ const DetailPage = () => {
       queryParams.append('page', donorFilters.page);
       queryParams.append('limit', '10');
 
-      const response = await axios.get(`http://localhost:5000/api/profile/donors?${queryParams}`);
+      const response = await axios.get(`https://blood-donation-web-app-beta.vercel.app/api/profile/donors?${queryParams}`);
       setDonors(response.data.donors);
     } catch (err) {
       console.error('Fetch donors error:', err);
@@ -133,11 +133,11 @@ const DetailPage = () => {
   const fetchUserRequests = async () => {
     try {
       // Fetch sent requests
-      const sentResponse = await axios.get('http://localhost:5000/api/requests/sent');
+      const sentResponse = await axios.get('https://blood-donation-web-app-beta.vercel.app/api/requests/sent');
       setSentRequests(sentResponse.data.requests);
 
       // Fetch received requests
-      const receivedResponse = await axios.get('http://localhost:5000/api/requests/received');
+      const receivedResponse = await axios.get('https://blood-donation-web-app-beta.vercel.app/api/requests/received');
       setReceivedRequests(receivedResponse.data.requests);
     } catch (err) {
       console.error('Fetch requests error:', err);
@@ -163,7 +163,7 @@ const DetailPage = () => {
         requiredDate: requestForm.requiredDate
       };
 
-      const response = await axios.post('http://localhost:5000/api/requests/send', requestData);
+      const response = await axios.post('https://blood-donation-web-app-beta.vercel.app/api/requests/send', requestData);
       
       setSuccess('Blood request sent successfully!');
       setShowRequestModal(false);
@@ -184,7 +184,7 @@ const DetailPage = () => {
   const acceptRequest = async (requestId) => {
     try {
       setRequestLoading(true);
-      const response = await axios.put(`http://localhost:5000/api/requests/accept/${requestId}`);
+      const response = await axios.put(`https://blood-donation-web-app-beta.vercel.app/api/requests/accept/${requestId}`);
       setSuccess('Request accepted successfully!');
       // Refresh both requests and notifications to ensure we have the latest data
       fetchUserRequests();
@@ -201,7 +201,7 @@ const DetailPage = () => {
   const rejectRequest = async (requestId) => {
     try {
       setRequestLoading(true);
-      await axios.put(`http://localhost:5000/api/requests/reject/${requestId}`);
+      await axios.put(`https://blood-donation-web-app-beta.vercel.app/api/requests/reject/${requestId}`);
       setSuccess('Request rejected successfully!');
       fetchUserRequests();
     } catch (err) {
@@ -216,7 +216,7 @@ const DetailPage = () => {
   const markDonationCompleted = async (requestId) => {
     try {
       setRequestLoading(true);
-      await axios.put(`http://localhost:5000/api/requests/complete/${requestId}`);
+      await axios.put(`https://blood-donation-web-app-beta.vercel.app/api/requests/complete/${requestId}`);
       setSuccess('Donation marked as completed!');
       fetchUserRequests();
     } catch (err) {
@@ -296,7 +296,7 @@ const DetailPage = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/profile/create', formData);
+      const response = await axios.post('https://blood-donation-web-app-beta.vercel.app/api/profile/create', formData);
       setProfile(response.data.profile);
       setSuccess('Profile saved successfully!');
       setIsEditing(false);
@@ -314,7 +314,7 @@ const DetailPage = () => {
   // Toggle availability
   const toggleAvailability = async () => {
     try {
-      const response = await axios.put('http://localhost:5000/api/profile/availability', {
+      const response = await axios.put('https://blood-donation-web-app-beta.vercel.app/api/profile/availability', {
         isAvailable: !profile.isAvailable
       });
       setProfile({ ...profile, isAvailable: response.data.isAvailable });
@@ -354,11 +354,11 @@ const DetailPage = () => {
     // Fetch notifications
     const fetchNotifications = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/notifications');
+        const response = await axios.get('https://blood-donation-web-app-beta.vercel.app/api/notifications');
         setNotifications(response.data.notifications);
         
         // Get unread count
-        const unreadResponse = await axios.get('http://localhost:5000/api/notifications/unread-count');
+        const unreadResponse = await axios.get('https://blood-donation-web-app-beta.vercel.app/api/notifications/unread-count');
         setUnreadCount(unreadResponse.data.count);
       } catch (err) {
         console.error('Fetch notifications error:', err);
@@ -368,7 +368,7 @@ const DetailPage = () => {
     // Mark a notification as read
     const markAsRead = async (notificationId) => {
       try {
-        await axios.put(`http://localhost:5000/api/notifications/read/${notificationId}`);
+        await axios.put(`https://blood-donation-web-app-beta.vercel.app/api/notifications/read/${notificationId}`);
         fetchNotifications();
       } catch (err) {
         console.error('Mark as read error:', err);
@@ -915,7 +915,7 @@ const DetailPage = () => {
                     <button 
                       onClick={async () => {
                         try {
-                          await axios.put('http://localhost:5000/api/notifications/read-all');
+                          await axios.put('https://blood-donation-web-app-beta.vercel.app/api/notifications/read-all');
                           fetchNotifications();
                         } catch (err) {
                           console.error('Mark all as read error:', err);
