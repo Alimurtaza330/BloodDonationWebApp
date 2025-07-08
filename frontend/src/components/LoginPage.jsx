@@ -26,7 +26,7 @@ const LoginPage = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/auth/login', {
+      const response = await axios.post('https://blood-donation-web-app-beta.vercel.app/api/auth/login', {
         email: formData.email,
         password: formData.password
       });
