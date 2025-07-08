@@ -21,7 +21,7 @@ const ForgotPasswordPage = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post('http://localhost:5000/api/auth/forgot-password', { email });
+      const response = await axios.post('https://blood-donation-web-app-beta.vercel.app/api/auth/forgot-password', { email });
       
       if (response.data.message) {
         setSuccess('Password reset instructions sent to your email');
