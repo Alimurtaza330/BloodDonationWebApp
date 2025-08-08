@@ -19,20 +19,27 @@ const app = express();
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// FIXED: Updated allowed origins with your current frontend URL
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://melodic-banoffee-47cb87.netlify.app'
+  'http://localhost:3000',
+  'https://blooddonationwebapp.vercel.app' // Your current frontend URL
 ];
 
 app.use(cors({
   origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log('CORS blocked origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Routes
@@ -79,9 +86,18 @@ app.get('/',(req,res)=>{
         error:false,
     })
 })
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err.stack);
+  
+  // Handle CORS errors
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({ 
+      message: 'CORS policy violation',
+      error: 'Origin not allowed'
+    });
+  }
   
   // Handle specific error types
   if (err.name === 'ValidationError') {
@@ -110,7 +126,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// 404 handler for undefined routes - FIXED: Remove the '*' wildcard
+// 404 handler for undefined routes
 app.use((req, res) => {
   res.status(404).json({ 
     message: `Route ${req.originalUrl} not found`
@@ -118,7 +134,6 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-
 app.listen(PORT, () => {
   console.log(`🚀 Blood Donation Server running on port ${PORT}`);
   console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
@@ -126,4 +141,5 @@ app.listen(PORT, () => {
   console.log(`👤 Profile endpoints: http://localhost:${PORT}/api/profile`);
   console.log(`📋 Request endpoints: http://localhost:${PORT}/api/requests`);
   console.log(`🔔 Notification endpoints: http://localhost:${PORT}/api/notifications`);
+  console.log(`🌐 Allowed origins:`, allowedOrigins);
 });
