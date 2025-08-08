@@ -76,7 +76,7 @@ const DetailPage = () => {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('https://bloodonationwebapp.vercel.app//api/profile/me');
+      const response = await axios.get('https://bloodonationwebapp.vercel.app/api/profile/me');
       setProfile(response.data.profile);
       setFormData({
         name: response.data.profile.name || '',
