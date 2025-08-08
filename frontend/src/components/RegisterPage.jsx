@@ -32,7 +32,7 @@ const RegisterPage = () => {
   try {
     setLoading(true);
     // Add API base URL (update with your actual backend URL)
-    const response = await axios.post('https://blood-donation-web-app-beta.vercel.app/api/auth/register', {
+    const response = await axios.post('https://bloodonationwebapp.vercel.app/api/auth/register', {
       email: formData.email,
         password: formData.password,
         confirmPassword: formData.confirmPassword
