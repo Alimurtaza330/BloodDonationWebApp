@@ -24,22 +24,40 @@ app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://blooddonationwebapp.vercel.app' // Your current frontend URL
+  'https://blooddonationwebapp.vercel.app' // Your frontend URL (with 'd' in donation)
 ];
 
+// Temporary: More permissive CORS for debugging
 app.use(cors({
   origin: function (origin, callback) {
+    console.log('Incoming request origin:', origin);
+    
     // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      console.log('CORS blocked origin:', origin);
-      callback(new Error('Not allowed by CORS'));
+    if (!origin) {
+      console.log('No origin - allowing request');
+      return callback(null, true);
     }
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      console.log('Origin allowed:', origin);
+      return callback(null, true);
+    }
+    
+    // For debugging: temporarily allow all Vercel apps
+    if (origin.includes('vercel.app')) {
+      console.log('Vercel app detected - temporarily allowing:', origin);
+      return callback(null, true);
+    }
+    
+    console.log('CORS blocked origin:', origin);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  preflightContinue: false,
+  optionsSuccessStatus: 200
 }));
 
 // Routes
