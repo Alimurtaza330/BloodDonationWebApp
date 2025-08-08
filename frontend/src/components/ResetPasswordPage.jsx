@@ -26,7 +26,7 @@ const ResetPasswordPage = () => {
       try {
         setTokenChecking(true);
         const response = await axios.get(
-          `https://blood-donation-web-app-beta.vercel.app/api/auth/validate-token/${token}`
+          `https://bloodonationwebapp.vercel.app/api/auth/validate-token/${token}`
         );
         
         if (response.data.valid) {
@@ -76,7 +76,7 @@ const ResetPasswordPage = () => {
       setLoading(true);
       // Send both password and confirmPassword as expected by backend
       const response = await axios.post(
-        `https://blood-donation-web-app-beta.vercel.app/api/auth/reset-password/${token}`,
+        `https://bloodonationwebapp.vercel.app/api/auth/reset-password/${token}`,
         { 
           password: password,
           confirmPassword: confirmPassword 
