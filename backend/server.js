@@ -22,9 +22,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // FIXED: Updated allowed origins with your current frontend URL
 const allowedOrigins = [
+  'https://blooddonationwebapp.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000',
-  'https://blooddonationwebapp.vercel.app' // Your frontend URL (with 'd' in donation)
+   // Your frontend URL (with 'd' in donation)
 ];
 
 // Temporary: More permissive CORS for debugging
