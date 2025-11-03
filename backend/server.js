@@ -111,7 +111,12 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Allowed Origins ->`, allowedOrigins);
+
+app.use((req, res) => {
+  res.status(404).json({
+    message: `Route ${req.originalUrl} not found`
+  });
 });
+
+// Export for Vercel serverless
+module.exports = app;
