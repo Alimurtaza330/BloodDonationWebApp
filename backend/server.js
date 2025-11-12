@@ -11,133 +11,64 @@ const authMiddleware = require('./middleware/authMiddleware');
 // Load environment variables
 dotenv.config();
 
+// Connect to database
+connectDB();
+
 const app = express();
 
-// ====================================
-// DATABASE CONNECTION
-// ====================================
-// Only connect if not already connected
-let isConnected = false;
+// Middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-const connectToDatabase = async () => {
-  if (isConnected) {
-    console.log('Using existing database connection');
-    return;
-  }
-  
-  try {
-    await connectDB();
-    isConnected = true;
-    console.log('✅ New database connection established');
-  } catch (error) {
-    console.error('❌ Database connection failed:', error);
-    // Don't throw error, let the app continue to show better error messages
-  }
-};
-
-// Connect to database
-connectToDatabase();
-
-// ====================================
-// MIDDLEWARE
-// ====================================
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// ====================================
-// CORS CONFIGURATION
-// ====================================
+// FIXED: Updated allowed origins with your current frontend URL
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
-  'http://localhost:5000',
-  'https://blooddonationwebapp.vercel.app',
-  'https://bloodonationwebapp.vercel.app',
+  'https://blooddonationwebapp.vercel.app' // Your frontend URL (with 'd' in donation)
 ];
 
+// Temporary: More permissive CORS for debugging
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
+    console.log('Incoming request origin:', origin);
+    
+    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) {
+      console.log('No origin - allowing request');
       return callback(null, true);
     }
     
     // Check if origin is in allowed list
-    if (allowedOrigins.indexOf(origin) !== -1) {
+    if (allowedOrigins.includes(origin)) {
+      console.log('Origin allowed:', origin);
       return callback(null, true);
     }
     
-    // Allow all Vercel deployments (preview branches)
-    if (origin.endsWith('.vercel.app')) {
+    // For debugging: temporarily allow all Vercel apps
+    if (origin.includes('vercel.app')) {
+      console.log('Vercel app detected - temporarily allowing:', origin);
       return callback(null, true);
     }
     
-    // Block other origins
-    return callback(new Error('Not allowed by CORS'), false);
+    console.log('CORS blocked origin:', origin);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: [
-    'Content-Type', 
-    'Authorization', 
-    'X-Requested-With', 
-    'Accept', 
-    'Origin'
-  ],
-  exposedHeaders: ['Content-Length'],
-  maxAge: 86400,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
   preflightContinue: false,
-  optionsSuccessStatus: 204
+  optionsSuccessStatus: 200
 }));
 
-// Additional CORS headers
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (origin && (allowedOrigins.indexOf(origin) !== -1 || origin.endsWith('.vercel.app'))) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-  }
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
-  next();
-});
-
-// ====================================
-// HEALTH CHECK (MUST BE FIRST)
-// ====================================
-app.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Blood Donation API is running',
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    success: true,
-    message: 'Blood Donation API is healthy',
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    database: isConnected ? 'connected' : 'disconnected'
-  });
-});
-
-// ====================================
-// API ROUTES
-// ====================================
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Protected route example
+// Example protected route
 app.get('/api/protected', authMiddleware, (req, res) => {
   res.json({ 
-    success: true,
     message: 'This is protected data',
     user: {
       id: req.user._id,
@@ -149,7 +80,6 @@ app.get('/api/protected', authMiddleware, (req, res) => {
 // Check authentication status
 app.get('/api/auth/check', authMiddleware, (req, res) => {
   res.json({ 
-    success: true,
     isAuthenticated: true,
     user: { 
       id: req.user._id,
@@ -159,107 +89,75 @@ app.get('/api/auth/check', authMiddleware, (req, res) => {
   });
 });
 
-// ====================================
-// ERROR HANDLING
-// ====================================
+// Health check route
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    message: 'Blood Donation API is running',
+    status: 'OK',
+    timestamp: new Date().toISOString()
+  });
+});
 
-// CORS Error Handler
+app.get('/',(req,res)=>{
+    res.send({
+        activeStatus:true,
+        error:false,
+    })
+})
+
+// Error handling middleware
 app.use((err, req, res, next) => {
-  if (err.message && err.message.includes('CORS')) {
+  console.error('Error:', err.stack);
+  
+  // Handle CORS errors
+  if (err.message === 'Not allowed by CORS') {
     return res.status(403).json({ 
-      success: false,
       message: 'CORS policy violation',
       error: 'Origin not allowed'
     });
   }
-  next(err);
-});
-
-// Validation Error Handler
-app.use((err, req, res, next) => {
+  
+  // Handle specific error types
   if (err.name === 'ValidationError') {
     return res.status(400).json({ 
-      success: false,
       message: 'Validation Error',
       errors: Object.values(err.errors).map(e => e.message)
     });
   }
-  next(err);
-});
-
-// Cast Error Handler
-app.use((err, req, res, next) => {
+  
   if (err.name === 'CastError') {
     return res.status(400).json({ 
-      success: false,
       message: 'Invalid ID format'
     });
   }
-  next(err);
-});
-
-// Duplicate Key Error
-app.use((err, req, res, next) => {
+  
   if (err.code === 11000) {
-    const field = Object.keys(err.keyPattern || {})[0] || 'field';
     return res.status(400).json({ 
-      success: false,
-      message: `${field} already exists`
+      message: 'Duplicate entry found'
     });
   }
-  next(err);
-});
-
-// JWT Errors
-app.use((err, req, res, next) => {
-  if (err.name === 'JsonWebTokenError') {
-    return res.status(401).json({ 
-      success: false,
-      message: 'Invalid token'
-    });
-  }
-  if (err.name === 'TokenExpiredError') {
-    return res.status(401).json({ 
-      success: false,
-      message: 'Token expired'
-    });
-  }
-  next(err);
-});
-
-// General Error Handler
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(err.status || 500).json({ 
-    success: false,
-    message: err.message || 'Internal server error',
-    ...(process.env.NODE_ENV === 'development' && { 
-      error: err.message,
-      stack: err.stack 
-    })
+  
+  // Default error response
+  res.status(500).json({ 
+    message: 'Something went wrong!',
+    ...(process.env.NODE_ENV === 'development' && { error: err.message })
   });
 });
 
-// 404 Handler
+// 404 handler for undefined routes
 app.use((req, res) => {
   res.status(404).json({ 
-    success: false,
     message: `Route ${req.originalUrl} not found`
   });
 });
 
-// ====================================
-// SERVER EXPORT FOR VERCEL
-// ====================================
-
-// For Vercel serverless functions
-module.exports = app;
-
-// For local development
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 5000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📍 Health check: http://localhost:${PORT}/api/health`);
-  });
-}
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`🚀 Blood Donation Server running on port ${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🔐 Auth endpoints: http://localhost:${PORT}/api/auth`);
+  console.log(`👤 Profile endpoints: http://localhost:${PORT}/api/profile`);
+  console.log(`📋 Request endpoints: http://localhost:${PORT}/api/requests`);
+  console.log(`🔔 Notification endpoints: http://localhost:${PORT}/api/notifications`);
+  console.log(`🌐 Allowed origins:`, allowedOrigins);
+});
